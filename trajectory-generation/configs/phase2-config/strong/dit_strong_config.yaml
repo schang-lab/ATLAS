@@ -1,0 +1,55 @@
+DiT:
+  # Sequence length in latent space (must match diffusion.seq_len and AE d_model length)
+  image_size: 64
+
+  # Latent channel dimension (must match autoencoder d_model and diffusion.latent_dim)
+  in_channels: 256
+
+  # Transformer backbone
+  hidden_size: 128
+  depth: 8
+  num_heads: 4
+
+  # Diffusion head options
+  cond_feature: false
+  learn_sigma: false
+
+  # Numerical / precision settings
+  use_fp16: false
+
+  # Trajectory-length conditioning (not used in current CBG finetune)
+  use_length_condition: false
+  length_vocab_size: 64
+
+  # Demographic conditioning (age_bin, gender_id)
+  # NOTE:
+  #   - Demo arrays in cache use raw ids: age_bin_raw ∈ [0, num_age_bins-1], gender_id_raw ∈ [0, num_genders-1].
+  #   - The finetune script shifts them by +1 before feeding DiT so that 0 is reserved as padding/null.
+  #   - Therefore set num_age_bins / num_genders to the number of raw categories.
+  use_demo_condition: true
+  num_age_bins: 4        # e.g., under 25 / 25-54 / 55+  → raw ids {0,1,2}
+  num_genders: 2         # e.g., female / male           → raw ids {0,1}
+  demo_hidden_dim: 256
+
+  # ------------------------------------------------------------
+  # Optional: balance coords ("wide") vs demo branch contribution
+  # ------------------------------------------------------------
+  # These are safe to add when loading a coords-only pretrained checkpoint:
+  # - New parameters will initialize and load with strict=False.
+  # - Defaults keep the old behavior (no scaling, no normalization).
+  #
+  # Practical starting point:
+  #   attr_demo_gain_init: 2.0
+  #   attr_wide_gain_init: 1.0
+  #   attr_gain_learnable: true
+  #   attr_branch_norm: none
+  #
+  # If you see demo dominating / diversity collapse, lower attr_demo_gain_init (e.g., 1.5–2.5)
+  # or keep it fixed (attr_gain_learnable: false).
+  attr_wide_gain_init: 1.0
+  attr_demo_gain_init: 3.0
+  attr_gain_learnable: false
+  # one of: none | layernorm
+  attr_branch_norm: none
+
+

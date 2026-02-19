@@ -1,0 +1,1 @@
+# Auto-encoder module for trajectory compression

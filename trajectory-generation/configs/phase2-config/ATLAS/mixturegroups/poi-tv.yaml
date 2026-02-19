@@ -1,0 +1,129 @@
+# LLP finetuning on Carlos LLP-world (demo-groups as regions), with periodic validation.
+# Change all /path/to/... values to your own folder paths before running.
+#
+# Run:
+#   python3 trajectory-generation/scripts/training/run_cbg_conditioned_training.py \
+#     --config trajectory-generation/configs/carlos_llp_demogroups_finetune.yaml
+#
+# IMPORTANT:
+# - Replace `diffusion.checkpoint` and `autoencoder.path` with your pretrained paths.
+# - Ensure the DiT config matches the checkpoint architecture; demo conditioning can be enabled
+#   even if the checkpoint was trained without demo (new embeddings will init randomly and load with strict=False).
+#
+diffusion:
+  # DiT architecture config (must match your checkpoint settings: image_size/seq_len, in_channels/latent_dim, etc.)
+  config: /path/to/ATLAS/trajectory-generation/configs/phase2-config/ATLAS/dit_llp_config.yaml
+  # Your pretrained DiT checkpoint (work/home conditioned).
+  checkpoint: /path/to/dit_checkpoint/dit_step_xxx.pt
+
+  timesteps: 1000
+  prediction_type: x0
+  latent_dim: 256
+  seq_len: 64
+
+  beta_schedule: cosine
+  timestep_sampling: uniform
+
+autoencoder:
+  # Phase-1 BART autoencoder directory (HF format).
+  path: /path/to/phase1_autoencoder/checkpoint
+
+data:
+  # TRAIN split LLP-world caches + region-level POI marginals.
+  cbg_cache_dir: /path/to/atlas_world_mixture/cache/train
+  poi_marginal_csv: /path/to/atlas_world_mixture/aggregates/train/p_poi.csv
+  allowed_cbgs: []   # leave empty to auto-intersect cache and p_poi.csv
+  num_special_tokens: 5
+  # Optional length distribution JSON (if you want realistic variable-length decoding masks)
+  length_dists_json: /path/to/atlas_world_mixture/length_dists_train_demogroups.json
+  min_traj_len: 2
+  max_traj_length: 64
+
+training:
+  # Aggregate/LLP loss for matching POI distributions.
+  # Supported: kl | js | tv | hellinger
+  aggregate_loss:
+    type: tv
+    epsilon: 1.0e-8
+  steps: 50000
+  batch_size: 1024
+  lr: 1e-6
+  lambda_agg: 1.0
+  log_every: 1
+  save_every: 2000
+  guidance_scale: 1.0
+  output_dir: /path/to/output/carlos_tv_poi_mask_0.1_mixture_seed_23
+  max_grad_norm: 1.0
+  gradient_accumulation_steps: 1
+  warmup_steps: 0
+
+  # Aggregate sampler (controls reverse sampling used by the aggregate/LLP branch only).
+  # - ddpm: ancestral sampling over diffusion.timesteps (slow)
+  # - ddim: reduced-step DDIM sampling (much faster). eta=0 is deterministic DDIM.
+  aggregate_sampler:
+    method: ddim
+    ddim_steps: 50
+    ddim_eta: 0.0
+
+  # Optional: mask POI_HOME/POI_WORK/POI_OTHER out of the aggregate/LLP objective
+  # (prevents these dominated tokens from collapsing diversity).
+  poi_token_mask:
+    enabled: true
+    vocab_path: /path/to/YOUR_DATA_FOLDER/controlled/tokenizer/vocab.txt
+    drop_tokens: [POI_HOME, POI_WORK, POI_OTHER]
+    renormalize: true
+    epsilon: 1.0e-12
+
+  # Optional: drop home/work coords for some aggregate batches (demo remains).
+  # Start small (e.g., 0.1) if you want an ablation to reduce over-reliance on coords.
+  aggregate_coord_dropout: 0.1
+
+  wandb: true
+  wandb_project: Mixture
+  log_agg_by_cbg: true
+  seed: 23
+  
+  llp:
+    enabled: true
+    # "pi" = true LLP: sample demo ids from π_region, use for both conditioning and LLP grouping.
+    demo_source: pi
+    # Optional: force each demo group to appear >=K times per batch (useful for mixed regions).
+    min_per_group: 0
+
+  # Validation (no early stopping): evaluate aggregate/LLP objective on VAL LLP-world.
+  validation:
+    enabled: true
+    eval_every: 10
+    num_batches: 10
+    batch_size: 1024
+    cbg_cache_dir: /path/to/atlas_world_mixture/cache/val
+    poi_marginal_csv: /path/to/atlas_world_mixture/aggregates/val/p_poi.csv
+    allowed_cbgs: []
+    num_special_tokens: 5
+    log_by_cbg: true
+    max_cbgs_to_log: 0
+
+  # Optional regularizers (off by default).
+  entropy_reg:
+    enabled: false
+    weight: 0.0
+  unique_reg:
+    enabled: false
+    weight: 0.0
+
+# Optional supervised diffusion branch (off by default for pure LLP).
+diffusion_mse:
+  enabled: true
+  weight: 1
+  data_dir: /path/to/YOUR_DATA_FOLDER
+  batch_size: 256
+  num_workers: 4
+  data_type: controlled
+  conditional_dropout: 0.0
+  randomize_demo_from_cbg: false
+
+device: cuda
+
+# Optional latent PCA adapter (only if your AE latent dim != diffusion.latent_dim).
+latent_pca:
+  path: /path/to/latent_pca/train.pt

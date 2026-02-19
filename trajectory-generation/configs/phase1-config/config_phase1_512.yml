@@ -1,0 +1,6 @@
+DiT:
+    image_size: 64      # Must match BART max_length
+    in_channels: 256    # Must match BART d_model
+    hidden_size: 512    # 2x in_channels
+    depth: 8            # Moderate depth
+    num_heads: 4        # More heads for larger hidden
