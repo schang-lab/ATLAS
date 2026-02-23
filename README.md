@@ -372,7 +372,7 @@ python trajectory-generation/scripts/evaluation/eval_by_demo.py \
 
 The training pipeline is inspired by the following projects:
 
-- [Cardiff: Leveraging the Spatial Hierarchy: Coarse-to-fine Trajectory Generation via Cascaded Hybrid Diffusion](https://github.com/urban-mobility-generation/Cardiff)
+- [Leveraging the Spatial Hierarchy: Coarse-to-fine Trajectory Generation via Cascaded Hybrid Diffusion](https://github.com/urban-mobility-generation/Cardiff)
 - [Latent Diffusion for Language Generation](https://github.com/justinlovelace/latent-diffusion-for-language)
 
 We thank the authors for their high-quality implementations and open-source contributions.
