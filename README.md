@@ -9,6 +9,32 @@ ATLAS is a two-phase trajectory generation pipeline:
 - **Phase 1**: train a generative model on trajectories without demographic labels.
 - **Phase 2**: fine-tune with demographic conditioning by sampling groups from the region's demographic composition and optimizing to match region's observed aggregate features.
 
+## Table of Contents
+
+- [Repository Structure](#repository-structure)
+- [Environment Setup](#environment-setup)
+- [Data](#data)
+  - [Expected Split-Data Format](#expected-split-data-format)
+  - [Data Preprocessing](#data-preprocessing)
+    - [A) SQL pipeline (raw events -> modeling tables)](#a-sql-pipeline-raw-events---modeling-tables)
+    - [B) Convert `traj.csv` + `demo.csv` to split-data format](#b-convert-trajcsv--democsv-to-split-data-format)
+  - [ATLAS WORLD Data (for Phase 2)](#atlas-world-data-for-phase-2)
+    - [1) Build demographic-group ATLAS WORLD](#1-build-demographic-group-atlas-world)
+    - [2) Write configs for precompute](#2-write-configs-for-precompute)
+    - [3) Precompute POI marginals and conditional cache](#3-precompute-poi-marginals-and-conditional-cache)
+    - [3b) (Optional, for category-transition objective) Build `p_cat_transition.npz`](#3b-optional-for-category-transition-objective-build-p_cat_transitionnpz)
+    - [4) Build length distributions](#4-build-length-distributions)
+    - [5) Build supervised splits aligned to ATLAS WORLD](#5-build-supervised-splits-aligned-to-atlas-world)
+    - [(Optional) Mixture / Rank-Deficient / Messy Worlds](#optional-mixture--rank-deficient--messy-worlds)
+- [Training](#training)
+  - [Phase 1](#phase-1)
+  - [Phase 2](#phase-2)
+- [Inference](#inference)
+  - [Baseline inference (home/work only, no demo conditioning)](#baseline-inference-homework-only-no-demo-conditioning)
+  - [Demo-conditioned inference (strong / ATLAS)](#demo-conditioned-inference-strong--atlas)
+- [Evaluation](#evaluation)
+- [Acknowledgements](#acknowledgements)
+
 ## Repository Structure
 
 - `autoencoder/`: autoencoder training and evaluation (phase 1).
@@ -47,7 +73,9 @@ export ATLAS_WORLD_ROOT="/absolute/path/to/atlas_world_data"
 
 `YOUR_DATA_FOLDER` should contain the split-data tree described below.
 
-## Expected Split-Data Format
+## Data
+
+### Expected Split-Data Format
 
 By default:
 
@@ -57,18 +85,18 @@ By default:
 
 Each split should contain:
 
-- `final_segments_all_train_data.pkl` (DataFrame with `unique_id_seq`, `attention_mask`, `individual_id`, `segment_id`)
-- `poi_map_feature.csv` (at least `poi_id,lat,lon,top_category`; `sub_category` optional)
-- `all_attr_results.npy` (`float32`, shape `[M,4]` = `[work_lat, work_lon, home_lat, home_lon]`)
-- `all_attr_results_with_demo.npy` (`float32`, shape `[M,6]` adding `[age_bin, gender_id]`)
-- `all_timestamp.npy` (`datetime64[ns]`, shape `[M,max_len]`, padded with `NaT`) (optional)
-- `all_dwell.npy` (`float32` seconds, shape `[M,max_len]`, padded with `0`) (optional)
-- `trajectory_length_ids.npy` (`int64`, shape `[M]`, trajectory length without pads)
-- `tokenizer/` (`BertTokenizerFast` folder)
+- **`final_segments_all_train_data.pkl`**: per-segment training samples as a pandas DataFrame. The main field is `unique_id_seq`, which is the **POI token sequence** for each `segment_id` (plus `attention_mask`, and IDs like `individual_id`/`segment_id`).
+- **`poi_map_feature.csv`**: POI metadata used for mapping tokens to coordinates/categories (at least `poi_id,lat,lon,top_category`; `sub_category` optional).
+- **`all_attr_results.npy`**: conditioning attributes (`float32`, shape `[M,4]` = `[work_lat, work_lon, home_lat, home_lon]`), aligned row-wise with the rows in the `.pkl`.
+- **`all_attr_results_with_demo.npy`**: same as above but includes demographics (`float32`, shape `[M,6]` adding `[age_bin, gender_id]`), aligned row-wise with the `.pkl`.
+- **`all_timestamp.npy`** (optional): per-token timestamps (`datetime64[ns]`, shape `[M,max_len]`, padded with `NaT`).
+- **`all_dwell.npy`** (optional): per-token dwell time in seconds (`float32`, shape `[M,max_len]`, padded with `0`).
+- **`trajectory_length_ids.npy`**: empirical trajectory lengths (`int64`, shape `[M]`), typically the number of non-pad tokens (used for length conditioning).
+- **`tokenizer/`**: a saved `BertTokenizerFast` directory (contains `vocab.txt` + tokenizer config; must match the tokenization used to build `unique_id_seq`).
 
-## Data Preprocessing
+### Data Preprocessing
 
-### A) SQL pipeline (raw events -> modeling tables)
+#### A) SQL pipeline (raw events -> modeling tables)
 
 Run SQL files in this order (Athena/Presto style):
 
@@ -90,7 +118,7 @@ Main SQL outputs:
 - `segment_visits14_hw_with_split` -> export as `traj.csv` (training sequence source)
 - `user_profiles_hw` -> export as `demo.csv` (conditioning source)
 
-### B) Convert `traj.csv` + `demo.csv` to split-data format
+#### B) Convert `traj.csv` + `demo.csv` to split-data format
 
 ```bash
 python data_preprocessing/convert_to_split_data.py \
@@ -102,9 +130,9 @@ python data_preprocessing/convert_to_split_data.py \
   --include-demo 
 ```
 
-## Build ATLAS WORLD Data (for Phase 2)
+### ATLAS WORLD Data (for Phase 2)
 
-### 1) Build demographic-group ATLAS WORLD
+#### 1) Build demographic-group ATLAS WORLD
 
 Train:
 
@@ -119,7 +147,7 @@ python helpers/make_atlas_world_from_split.py \
 
 Repeat for val/test by replacing `train` with `val` and `test` in both `--split-root` and `--out-root`.
 
-### 2) Write configs for precompute
+#### 2) Write configs for precompute
 
 Train:
 
@@ -136,7 +164,7 @@ python helpers/write_atlas_configs.py \
 
 Repeat for val/test.
 
-### 3) Precompute POI marginals and conditional cache
+#### 3) Precompute POI marginals and conditional cache
 
 ```bash
 python trajectory-generation/scripts/precompute/build_poi_marginals.py \
@@ -148,7 +176,7 @@ python trajectory-generation/scripts/precompute/cache_cbg_conditionals.py \
 
 Repeat for val/test configs.
 
-### 3b) (Optional, for category-transition objective) Build `p_cat_transition.npz`
+#### 3b) (Optional, for category-transition objective) Build `p_cat_transition.npz`
 
 If your Phase 2 config uses:
 
@@ -164,7 +192,7 @@ python trajectory-generation/scripts/precompute/build_category_transition_margin
 
 Repeat for val/test if you also evaluate/monitor transitions on those splits.
 
-### 4) Build length distributions
+#### 4) Build length distributions
 
 ```bash
 python helpers/build_length_dists_from_atlas_world.py \
@@ -175,7 +203,7 @@ python helpers/build_length_dists_from_atlas_world.py \
   --num-special-tokens 5
 ```
 
-### 5) Build supervised splits aligned to ATLAS WORLD
+#### 5) Build supervised splits aligned to ATLAS WORLD
 
 ```bash
 python helpers/make_supervised_split_aligned_to_world.py \
@@ -186,7 +214,7 @@ python helpers/make_supervised_split_aligned_to_world.py \
 
 Repeat for val/test.
 
-## Optional: Mixture / Rank-Deficient / Messy Worlds
+#### (Optional) Mixture / Rank-Deficient / Messy Worlds
 
 Use:
 
@@ -196,14 +224,16 @@ Use:
 - `helpers/make_atlas_mixture_world_from_demogroups.py`
 - `helpers/make_atlas_mixture_world.py`
 
-## Phase 1 Training
+## Training
 
-### 1) Autoencoder pretraining
+### Phase 1
+
+#### 1) Autoencoder pretraining
 
 Script: `autoencoder/train_autoencoder/train_phase1_pretrain.py`  
 Example launcher: `autoencoder/train_autoencoder/example_train.sh`
 
-### 1.5) Compute latent normalization stats (required before diffusion training)
+#### (Optional, recommended) Compute latent normalization stats (stabilizes diffusion training)
 
 Script: `trajectory-generation/scripts/precompute/compute_latent_pca.py`
 
@@ -225,7 +255,7 @@ CUDA_VISIBLE_DEVICES=0 python trajectory-generation/scripts/precompute/compute_l
   --max_length 64
 ```
 
-### 2) Diffusion pretraining (baseline)
+#### 2) Diffusion pretraining (baseline)
 
 Script: `trajectory-generation/scripts/training/train_dit_only.py`
 
@@ -247,9 +277,9 @@ python trajectory-generation/scripts/training/train_dit_only.py \
   --latent_pca_path /path/to/latent_pca.pt
 ```
 
-## Phase 2 Training
+### Phase 2
 
-### A) Strongly supervised (demo labels directly used)
+#### A) Strongly supervised (demo labels directly used)
 
 Script: `trajectory-generation/scripts/training/train_dit_only.py`  
 Example launcher: `trajectory-generation/scripts/training/phase2_strong.sh`
@@ -258,7 +288,7 @@ Use `--data_dir` pointing to:
 
 - `${ATLAS_WORLD_ROOT}/supervised_splits/demogroups_aligned`
 
-### B) ATLAS aggregate-supervised fine-tuning
+#### B) ATLAS aggregate-supervised fine-tuning
 
 Script: `trajectory-generation/scripts/training/run_cbg_conditioned_training.py`  
 Example launcher: `trajectory-generation/scripts/training/phase2_ATLAS.sh`  
@@ -337,3 +367,12 @@ python trajectory-generation/scripts/evaluation/eval_by_demo.py \
   --spatial_bins 100 \
   --grid_size 100
 ```
+
+## Acknowledgements
+
+The training pipeline is inspired by the following projects:
+
+- [Cardiff: Leveraging the Spatial Hierarchy: Coarse-to-fine Trajectory Generation via Cascaded Hybrid Diffusion](https://github.com/urban-mobility-generation/Cardiff)
+- [Latent Diffusion for Language Generation](https://github.com/justinlovelace/latent-diffusion-for-language)
+
+We thank the authors for their high-quality implementations and open-source contributions.
