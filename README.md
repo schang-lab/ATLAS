@@ -1,5 +1,7 @@
 # ATLAS: Learning Demographic-Conditioned Mobility Trajectories with Aggregate Supervision
 
+[![arXiv](https://img.shields.io/badge/arXiv-2603.03275-b31b1b)](http://arxiv.org/abs/2603.03275)
+
 ![ATLAS Pipeline](pipeline.png)
 
 Human mobility trajectories are widely studied in public health and social science, where different demographic groups exhibit significantly different mobility patterns. However, existing trajectory generation models rarely capture this heterogeneity because most trajectory datasets lack demographic labels. To address this gap in data, we propose **ATLAS**, a weakly supervised approach for demographic-conditioned trajectory generation using only (i) individual trajectories without demographic labels, (ii) region-level aggregated mobility features, and (iii) region-level demographic compositions from census data. ATLAS trains a trajectory generator and fine-tunes it so that simulated mobility matches observed regional aggregates while conditioning on demographics. Experiments on real trajectory data with demographic labels show that ATLAS substantially improves demographic realism over baselines (JSD ↓ 12%-69%) and closes much of the gap to strongly supervised training. We further develop theoretical analyses for when and why ATLAS works, identifying key factors including demographic diversity across regions and the informativeness of the aggregate feature, paired with experiments demonstrating the practical implications of our theory.
