@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build an LLP-world directory from Carlos `split_data_carlos_w1_demo`.
+Build an LLP-world directory from Embee `split_data_embee_w1_demo`.
 
 Writes a directory layout consumable by:
   - trajectory-generation/scripts/build_poi_marginals.py
@@ -257,7 +257,7 @@ def main() -> None:
     loaded = load_split(split_root, vocab_path)
     attrs = loaded.attrs
 
-    # Filter missing demo by default (Carlos uses -1 for missing).
+    # Filter missing demo by default (Embee uses -1 for missing).
     if args.keep_missing_demo:
         keep_mask = np.ones((attrs.shape[0],), dtype=bool)
     else:

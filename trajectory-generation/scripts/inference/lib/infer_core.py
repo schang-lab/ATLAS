@@ -181,12 +181,12 @@ def convert_poi_sequences_to_poi_ids_infer(
     return sequences
 
 
-def convert_poi_sequences_to_coordinates_carlos(*args, **kwargs):
+def convert_poi_sequences_to_coordinates_embee(*args, **kwargs):
     """Backward-compatible alias for convert_poi_sequences_to_coordinates_infer."""
     return convert_poi_sequences_to_coordinates_infer(*args, **kwargs)
 
 
-def convert_poi_sequences_to_poi_ids_carlos(*args, **kwargs):
+def convert_poi_sequences_to_poi_ids_embee(*args, **kwargs):
     """Backward-compatible alias for convert_poi_sequences_to_poi_ids_infer."""
     return convert_poi_sequences_to_poi_ids_infer(*args, **kwargs)
 

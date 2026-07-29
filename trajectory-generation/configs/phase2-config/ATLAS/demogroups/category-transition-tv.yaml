@@ -1,9 +1,9 @@
-# LLP finetuning on Carlos LLP-world (demo-groups as regions), with periodic validation.
+# LLP finetuning on Embee LLP-world (demo-groups as regions), with periodic validation.
 # Change all /path/to/... values to your own folder paths before running.
 #
 # Run:
 #   python3 trajectory-generation/scripts/training/run_cbg_conditioned_training.py \
-#     --config trajectory-generation/configs/carlos_llp_demogroups_finetune.yaml
+#     --config trajectory-generation/configs/embee_llp_demogroups_finetune.yaml
 #
 # IMPORTANT:
 # - Replace `diffusion.checkpoint` and `autoencoder.path` with your pretrained paths.
@@ -37,8 +37,8 @@ data:
   # Required for category-based aggregate features (Option A/D):
   # This vocab must match the one used to build p_poi.csv and your LLP-world sequences.
   vocab_path: /path/to/YOUR_DATA_FOLDER/controlled/tokenizer/vocab.txt
-  # POI->category mapping CSV (Carlos `poi_map_feature.csv`); used to map POI probabilities into category space.
-  # Update this path to wherever your `split_data_carlos_cat/.../poi_map_feature.csv` lives in your environment.
+  # POI->category mapping CSV (Embee `poi_map_feature.csv`); used to map POI probabilities into category space.
+  # Update this path to wherever your `split_data_embee_cat/.../poi_map_feature.csv` lives in your environment.
   poi_map_feature_csv: /path/to/YOUR_DATA_FOLDER/controlled/train/poi_map_feature.csv
   # Category granularity: use the `top_category` column from poi_map_feature.csv.
   poi_category_column: top_category
@@ -66,7 +66,7 @@ training:
   log_every: 1
   save_every: 1000
   guidance_scale: 1.0
-  output_dir: /path/to/output/carlos_tv_cate_trans_mask_0.1_seed_23
+  output_dir: /path/to/output/embee_tv_cate_trans_mask_0.1_seed_23
   max_grad_norm: 1.0
   gradient_accumulation_steps: 1
   warmup_steps: 0

@@ -1,0 +1,70 @@
+# VOLUNTEER strong hybrid:
+# - keeps supervised ELBO training on labeled trajectories
+# - adds a prior-sampled aggregate branch on the same labeled batches
+# - uses FiLM zero-init + demo-only warmup, like the safer strong variant
+
+experiment:
+  setup: strong_hybrid
+  init_checkpoint: /path/to/output/runs/volunteer_baseline/baseline_final.pt
+
+model:
+  vocab_size: 9506
+  loc_emb_size: 256
+  tim_emb_size: 64
+  demo_emb_size: 128
+  pos_emb_size: 64
+  hidden_size: 512
+  latent_size: 256
+  dropout: 0.2
+  num_age_bins: 4
+  num_genders: 2
+  max_seq_len: 64
+  tim_buckets: 1440
+  num_special_tokens: 5
+  use_demo_condition: true
+  demo_conditioning_type: film_zero_init
+
+data:
+  split_data_dir: /path/to/atlas_world/embee_ca/supervised_splits/demogroups_aligned/controlled
+  num_workers: 4
+
+training:
+  epochs: 10000
+  lr: 1.0e-4
+  batch_size: 256
+  max_grad_norm: 1.0
+  log_every: 50
+  save_every_epochs: 1000
+  output_dir: /path/to/output/runs/volunteer_strong_hybrid_aligned_film_warmup_lr_1e-4
+  wandb: true
+  wandb_project: volunteer-atlas
+  wandb_run_name: volunteer-strong-hybrid-aligned-film-warmup-lr-1e-4
+
+  # Match the safer strong fine-tune schedule.
+  freeze_backbone_for_demo: false
+  demo_only_steps: 5000
+  backbone_lr_scale: 0.1
+
+  # Hybrid objective:
+  #   total_loss = lambda_supervised * ELBO + lambda_prior * prior_aggregate_loss
+  lambda_supervised: 1.0
+  lambda_prior: 1.0
+
+  # Aggregate target built from the same labeled minibatch.
+  # `age_gender` preserves demographic separation; `batch` is a weaker fallback.
+  prior_group_by: age_gender
+
+  # Same divergence family used elsewhere in ATLAS experiments.
+  prior_loss_type: js
+
+  # Prior branch decoder-time position handling.
+  # `ramp` matches the ATLAS helper more closely than all-zero positions.
+  prior_pos_mode: ramp
+  prior_pos_step_minutes: 30
+
+  # Validation / checkpoint selection should favor sample quality, not ELBO alone.
+  prior_val_batches: 20
+  best_metric: prior
+
+device: cuda
+seed: 42

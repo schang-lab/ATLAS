@@ -1,0 +1,90 @@
+# VAE LLP finetuning on Embee LLP-world (demo-groups as regions).
+#
+# This mirrors:
+#   trajectory-generation/configs/california/embee_js_poi/ca_embee_llp_demogroups_finetune_js_0.1.yaml
+# but swaps the diffusion/DiT backbone for the VAE backbone used by
+# run_cbg_conditioned_training_vae.py.
+#
+# Run:
+#   python3 trajectory-generation/scripts/training/run_cbg_conditioned_training_vae.py \
+#     --config trajectory-generation/configs/california-vae/ca_embee_llp_demogroups_finetune_vae_js_0.1.yaml
+#
+# IMPORTANT:
+# - Set `vae.checkpoint` to your pretrained BASELINE VAE checkpoint (home/work only).
+# - Use a VAE config that enables demographic conditioning so aggregate training can
+#   learn/use the demo branch under LLP. Starting from a baseline checkpoint is fine;
+#   new demo-conditioning weights will load as missing keys and initialize randomly.
+
+vae:
+  # VAE architecture config. Must match the checkpoint backbone dimensions.
+  config: trajectory-generation/configs/phase1-config/config_vae_phase1_demo.yml
+  # Pretrained baseline VAE checkpoint (replace with your actual baseline VAE path).
+  checkpoint: /path/to/phase1_vae/vae_final.pt
+  # Must match VAE/BART latent sequence length and latent dim after PCA.
+  seq_len: 64
+  latent_dim: 256
+
+autoencoder:
+  # Phase-1 BART autoencoder directory (HF format).
+  path: /path/to/phase1_autoencoder/checkpoint
+
+data:
+  # TRAIN split LLP-world caches + region-level POI marginals.
+  cbg_cache_dir: /path/to/atlas_world/embee_ca_demogroups/cache/train
+  poi_marginal_csv: /path/to/atlas_world/embee_ca_demogroups/aggregates/train/p_poi.csv
+  allowed_cbgs: []   # leave empty to auto-intersect cache and p_poi.csv
+  num_special_tokens: 5
+
+training:
+  vae_loss:
+    enabled: true
+    weight: 1.0
+    data_dir: /path/to/embee_ca_nodemo
+    data_type: controlled
+    training_phase: phase1
+    batch_size: 64
+    val_num_batches: 10
+    kl_beta_max: 0.001
+    kl_anneal_steps: 5000
+  # Aggregate/LLP loss for matching POI distributions.
+  # Supported: kl | js | tv | hellinger
+  aggregate_loss:
+    type: js
+    epsilon: 1.0e-8
+  steps: 20000
+  batch_size: 1024
+  lr: 5.0e-7
+  lambda_agg: 10.0
+  seed: 108
+  log_every: 1
+  save_every: 5000
+  output_dir: /path/to/output/embee_ca/embee_vae_js_poi_mask_0.1_lambda_10_lr_5e-7_seed_108
+  max_grad_norm: 1.0
+  wandb: true
+  wandb_name: vae-llp-demogroups-js-lambda-10-lr-5e-7-seed-108
+  log_agg_by_cbg: true
+
+  llp:
+    enabled: true
+    # "pi" = true LLP: sample demo ids from pi_region and use those for both
+    # conditioning and LLP grouping.
+    demo_source: pi
+    min_per_group: 0
+
+  # Validation (no early stopping): evaluate aggregate/LLP objective on VAL LLP-world.
+  validation:
+    enabled: true
+    eval_every: 10
+    num_batches: 10
+    batch_size: 1024
+    cbg_cache_dir: /path/to/atlas_world/embee_ca_demogroups/cache/val
+    poi_marginal_csv: /path/to/atlas_world/embee_ca_demogroups/aggregates/val/p_poi.csv
+    allowed_cbgs: []
+    num_special_tokens: 5
+    log_by_cbg: true
+    max_cbgs_to_log: 0
+
+device: cuda
+
+latent_pca:
+  path: /path/to/latent_stats/train.pt

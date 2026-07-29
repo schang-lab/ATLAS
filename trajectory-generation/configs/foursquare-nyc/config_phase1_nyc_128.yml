@@ -1,0 +1,20 @@
+# DiT phase-1 (baseline) architecture for Foursquare NYC — UNCONDITIONAL.
+#
+# NYC has NO home/work coordinates (all zeros), so phase-1 pretraining is
+# effectively unconditional (coords condition on a constant zero vector), and
+# there is no demo branch here (that comes in strong/atlas).
+#
+# NOTE on dims:
+# - image_size = latent sequence length = BART max_length. NYC "small" BART = 64.
+# - in_channels is AUTO-OVERRIDDEN at runtime to the latent-PCA component_dim
+#   (train_dit_only.py:1085). With nopca_fp/train_nyc2026.pt this equals the BART
+#   d_model, so the 256 below is just a placeholder and does not need editing.
+# - vocab is taken from the tokenizer at data-load time, NOT from this file.
+# Verify against the NYC BART config.json if unsure:
+#   python -c "import json;c=json.load(open('<BART-fp>/checkpoint-6500/config.json'));print(c['d_model'],c.get('max_position_embeddings'))"
+DiT:
+    image_size: 64      # Must match NYC BART max_length
+    in_channels: 128    # NYC BART d_model=128 (also auto-set from latent_pca.component_dim)
+    hidden_size: 128    # matches the CA baseline (so strong/atlas can load it)
+    depth: 8
+    num_heads: 4

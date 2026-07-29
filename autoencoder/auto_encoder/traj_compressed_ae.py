@@ -121,7 +121,7 @@ class BARTLatentCompression(BartForConditionalGeneration):
         return latent
 
     def get_decoder_input(self, diffusion_latent):
-        """
+        r"""
         :param diffusion_latent: Z
         :return: decompressed latent \hat{H}
         """
@@ -130,7 +130,7 @@ class BARTLatentCompression(BartForConditionalGeneration):
     # Map encoder outputs to decoder inputs
     def encoder_output_to_decoder_input(self, encoder_outputs, attention_mask, segment_coords=None,
                                       top_categories=None):
-        """
+        r"""
         :param encoder_outputs:
         :param attention_mask:
         :param segment_coords:

@@ -3,8 +3,8 @@
 Run inference + evaluation for a sequence of DiT checkpoints (dit_step_XXX.pt).
 
 For each checkpoint:
-  1) Runs inference with inference_dit_with_demo_carlos.py
-  2) Runs evaluate_carlos_by_demo_group.py on the outputs
+  1) Runs inference with inference_demo.py
+  2) Runs eval_by_demo.py on the outputs
   3) Aggregates JSD metrics into a summary CSV/JSON
 """
 
@@ -88,7 +88,7 @@ def _collect_jsd_by_group(metrics_csv: Path) -> List[Dict[str, object]]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Evaluate dit_step_*.pt checkpoints using Carlos demo evaluator")
+    parser = argparse.ArgumentParser(description="Evaluate dit_step_*.pt checkpoints using Embee demo evaluator")
     parser.add_argument("--ckpt_dir", type=str, required=True, help="Directory containing cbg_finetune_step_*.pt")
     parser.add_argument("--config", type=str, required=True, help="DiT config YAML")
     parser.add_argument("--autoencoder_path", type=str, required=True, help="Phase-1 autoencoder checkpoint dir")
@@ -104,7 +104,7 @@ def main() -> None:
     parser.add_argument("--inference_script", type=str, default=None, help="Path to inference script (optional)")
     parser.add_argument("--eval_script", type=str, default=None, help="Path to eval script (optional)")
 
-    # Evaluation histogram/grid parameters (passed to evaluate_carlos_by_demo_group.py)
+    # Evaluation histogram/grid parameters (passed to eval_by_demo.py)
     parser.add_argument("--histogram_bins", type=int, default=40, help="Histogram bins for evaluation (default: 10000)")
     parser.add_argument("--spatial_bins", type=int, default=40, help="Spatial bins for evaluation (default: 10000)")
     parser.add_argument("--grid_size", type=int, default=40, help="Grid size for evaluation (default: 20)")
@@ -123,13 +123,13 @@ def main() -> None:
         "--inference_extra",
         nargs=argparse.REMAINDER,
         default=[],
-        help="Extra args passed to inference_dit_with_demo_carlos.py (use after --)",
+        help="Extra args passed to inference_demo.py (use after --)",
     )
     parser.add_argument(
         "--eval_extra",
         nargs=argparse.REMAINDER,
         default=[],
-        help="Extra args passed to evaluate_carlos_by_demo_group.py (use after --)",
+        help="Extra args passed to eval_by_demo.py (use after --)",
     )
 
     args = parser.parse_args()
@@ -143,8 +143,8 @@ def main() -> None:
         raise FileNotFoundError(f"No checkpoints matching dit_step_*.pt in {ckpt_dir}")
 
     script_dir = Path(__file__).resolve().parent
-    default_inference = script_dir.parent / "inference" / "inference_dit_with_demo_carlos.py"
-    default_eval = script_dir / "evaluate_carlos_by_demo_group.py"
+    default_inference = script_dir.parent / "inference" / "inference_demo.py"
+    default_eval = script_dir / "eval_by_demo.py"
 
     inference_script = Path(args.inference_script) if args.inference_script else default_inference
     eval_script = Path(args.eval_script) if args.eval_script else default_eval

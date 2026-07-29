@@ -6,7 +6,7 @@ This is useful for a strong supervised baseline: finetune on per-trajectory labe
 (home/work/age/gender) but using exactly the same *subset* of trajectories that
 the ATLAS world keeps (e.g., dropping missing demographics).
 
-For Carlos demo-group worlds produced by `make_llp_world_from_split.py` with:
+For Embee demo-group worlds produced by `make_llp_world_from_split.py` with:
   - region_mode=demo_group
   - max_per_region=None
   - keep_missing_demo=false
@@ -114,7 +114,7 @@ def _select_indices_from_controlled_split(
         pairs_arr = np.stack([age, gender], axis=1)
         allowed = np.array(sorted(allowed_demo_pairs), dtype=np.int64)
         # Vectorized membership: mark true if row matches any allowed pair.
-        # Since Carlos has small number of demo groups, a simple loop is fine and clear.
+        # Since Embee has small number of demo groups, a simple loop is fine and clear.
         allowed_mask = np.zeros((attrs.shape[0],), dtype=bool)
         for a, g in allowed.tolist():
             allowed_mask |= (pairs_arr[:, 0] == a) & (pairs_arr[:, 1] == g)
@@ -180,7 +180,7 @@ def build_selected_controlled_split(
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--world-root", type=str, required=True, help="e.g. llp_world_carlos/world_train_demogroups")
+    ap.add_argument("--world-root", type=str, required=True, help="e.g. llp_world_embee/world_train_demogroups")
     ap.add_argument("--out-data-dir", type=str, required=True, help="Base output dir; writes <out-data-dir>/controlled/<split>")
     ap.add_argument("--split", type=str, required=True, choices=["train", "val", "test"])
     ap.add_argument(

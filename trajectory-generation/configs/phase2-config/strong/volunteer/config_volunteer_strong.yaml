@@ -1,0 +1,46 @@
+# VOLUNTEER setup 2:
+# Strong = start from the home/work baseline, enable demo conditioning, then
+# train with per-trajectory demographic labels using the standard VAE ELBO.
+
+experiment:
+  setup: strong
+  init_checkpoint: /path/to/output/runs/volunteer_baseline/baseline_final.pt
+
+model:
+  vocab_size: 9506
+  loc_emb_size: 256
+  tim_emb_size: 64
+  demo_emb_size: 128
+  pos_emb_size: 64
+  hidden_size: 512
+  latent_size: 256
+  dropout: 0.2
+  num_age_bins: 4
+  num_genders: 2
+  max_seq_len: 64
+  tim_buckets: 1440
+  num_special_tokens: 5
+  use_demo_condition: true
+  demo_conditioning_type: legacy
+
+data:
+  split_data_dir: /path/to/atlas_world/embee_ca/supervised_splits/demogroups_aligned/controlled
+  num_workers: 4
+
+training:
+  epochs: 1000
+  lr: 1.0e-4
+  batch_size: 512
+  max_grad_norm: 1.0
+  log_every: 50
+  save_every_epochs: 100
+  output_dir: /path/to/output/runs/volunteer_strong_lr_1e-4
+  wandb: true
+  wandb_project: volunteer-atlas
+  wandb_run_name: volunteer-strong-demo-supervised-lr-1e-4
+  freeze_backbone_for_demo: false
+  demo_only_steps: 0
+  backbone_lr_scale: 0.1
+
+device: cuda
+seed: 42

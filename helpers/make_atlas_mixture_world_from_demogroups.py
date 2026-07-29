@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Build a *mixture* LLP-world by sampling REAL trajectories from an existing demo-separated
-world (e.g. llp_world_carlos/world_train_demogroups).
+world (e.g. llp_world_embee/world_train_demogroups).
 
 This matches the user's desired "A1" setting:
   - We are NOT synthesizing new POI sequences.

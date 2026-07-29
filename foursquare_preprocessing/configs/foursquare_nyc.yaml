@@ -1,0 +1,47 @@
+# Foursquare NYC preprocessing configuration.
+# Paths are relative to the repository root.
+
+data:
+  tist2015_checkins: dataset-foursquare/dataset_TIST2015/dataset_TIST2015_Checkins.txt
+  tist2015_pois: dataset-foursquare/dataset_TIST2015/dataset_TIST2015_POIs.txt
+  ubicomp2016_profiles: dataset-foursquare/dataset_UbiComp2016/dataset_UbiComp2016_UserProfile_NYC.txt
+  city: NYC
+
+home_work:
+  # The Foursquare release has no reliable home/work coordinates; these
+  # categories are detected only for bookkeeping and the resulting attrs are
+  # written as zeros (the Phase 1 model for this dataset is unconditional).
+  home_category: "Home (private)"
+  work_category: "Office"
+  fallback_to_most_visited: true
+
+split:
+  # User-level split, stratified by gender.
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  seed: 42
+  stratify_by: gender
+
+output:
+  dir: foursquare_preprocessing/outputs
+
+# Optional LLM provider for step 2. NOT used for any reported result -- all
+# reported age pseudo-labels come from the rule-based score in `age_rule.py`
+# (`--provider rule_based`, the default). Supply the key via the OPENAI_API_KEY
+# environment variable rather than committing it here.
+llm:
+  provider: openai
+  base_url: http://127.0.0.1:8000/v1
+  model: Qwen/Qwen2.5-7B-Instruct
+  api_key: ${OPENAI_API_KEY}
+  temperature: 0.1
+  top_p: 0.95
+  max_new_tokens: 256
+  timeout_s: 60
+
+convert:
+  max_len: 64
+  vocab_size: 3000
+  token_column: poi_raw_id
+  output_root: data/foursquare_nyc

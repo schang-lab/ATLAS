@@ -9,11 +9,21 @@ from contextlib import contextmanager
 
 import torch.utils.data
 
-from src.dit import DiT
-from src import sd_unet
-from src.sd_unet import Unet
+try:
+    from src.dit import DiT
+except (ImportError, ModuleNotFoundError):
+    DiT = None
+try:
+    from src import sd_unet
+    from src.sd_unet import Unet
+except (ImportError, ModuleNotFoundError):
+    sd_unet = None
+    Unet = None
 from src.helpers import exists
-from src.cardiff import Cardiff
+try:
+    from src.cardiff import Cardiff
+except (ImportError, ModuleNotFoundError):
+    Cardiff = None
 from src.utils import batch_count_lengths
 
 

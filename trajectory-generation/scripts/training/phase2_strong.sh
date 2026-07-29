@@ -39,7 +39,7 @@ srun python "${TRAIN_SCRIPT}" \
   --save_steps 10000 \
   --warmup_steps 0 \
   --use_wandb \
-  --wandb_project dit-carlos \
+  --wandb_project dit-embee \
   --enable_validation \
   --eval_steps 500 \
   --eval_samples 1000 \

@@ -22,7 +22,7 @@ from .eval_by_demo_io import (
     _summarize_demo_counts,
     _unpack_key,
 )
-from .eval_by_demo_mapping import _map_sequences_to_coords_carlos, _normalize_traj_home_work_frame
+from .eval_by_demo_mapping import _map_sequences_to_coords_embee, _normalize_traj_home_work_frame
 from .eval_by_demo_metrics import (
     _compute_metrics_for_group,
     _compute_poi_category_jsd,
@@ -127,7 +127,7 @@ def _eval_one_model(
         real_attrs_4d_g = real_attrs[real_sel, :4] if real_attrs.shape[1] >= 4 else None
         syn_attrs_4d_g = syn_attrs[syn_sel, :4] if syn_attrs.shape[1] >= 4 else None
 
-        real_trajs, real_stats, real_hw, real_kept_seqs = _map_sequences_to_coords_carlos(
+        real_trajs, real_stats, real_hw, real_kept_seqs = _map_sequences_to_coords_embee(
             sequences=real_seqs_g,
             poi_coords=poi_coords,
             attrs_4d=real_attrs_4d_g,
@@ -135,7 +135,7 @@ def _eval_one_model(
             label=f"real/{key}",
             drop_home_work_points=bool(drop_home_work_points),
         )
-        syn_trajs, syn_stats, syn_hw, syn_kept_seqs = _map_sequences_to_coords_carlos(
+        syn_trajs, syn_stats, syn_hw, syn_kept_seqs = _map_sequences_to_coords_embee(
             sequences=syn_seqs_g,
             poi_coords=poi_coords,
             attrs_4d=syn_attrs_4d_g,

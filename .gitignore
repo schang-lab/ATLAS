@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+
+# Datasets and experiment outputs (no data is distributed with this repo)
+data/
+atlas_world/
+outputs/
+foursquare_preprocessing/outputs/
+wandb/
+*.pt
+*.ckpt
+
+# Raw datasets downloaded by the preprocessing scripts
+dataset-foursquare/
+census_shapefiles/
+
+# Local working copies (not part of the public release)
+atlas-aaai2027-code/
+mobility-synthetic-populations_copy/

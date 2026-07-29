@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Create a "coord-null" version of a Carlos controlled split by zeroing out (work/home) coords.
+Create a "coord-null" version of a Embee controlled split by zeroing out (work/home) coords.
 
 This is useful when you want:
   - unconditional pretraining on controlled POI sequences (attrs all zeros), and/or

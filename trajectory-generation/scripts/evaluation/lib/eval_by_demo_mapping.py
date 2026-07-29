@@ -95,7 +95,7 @@ def _normalize_traj_home_work_frame(
     return np.stack([xr.astype(np.float32), yr.astype(np.float32)], axis=0)
 
 
-def _map_sequences_to_coords_carlos(
+def _map_sequences_to_coords_embee(
     *,
     sequences: List[List[str]],
     poi_coords: Dict[str, Tuple[float, float]],

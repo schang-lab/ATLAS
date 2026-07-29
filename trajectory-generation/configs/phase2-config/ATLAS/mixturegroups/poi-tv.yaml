@@ -1,9 +1,9 @@
-# LLP finetuning on Carlos LLP-world (demo-groups as regions), with periodic validation.
+# LLP finetuning on Embee LLP-world (demo-groups as regions), with periodic validation.
 # Change all /path/to/... values to your own folder paths before running.
 #
 # Run:
 #   python3 trajectory-generation/scripts/training/run_cbg_conditioned_training.py \
-#     --config trajectory-generation/configs/carlos_llp_demogroups_finetune.yaml
+#     --config trajectory-generation/configs/embee_llp_demogroups_finetune.yaml
 #
 # IMPORTANT:
 # - Replace `diffusion.checkpoint` and `autoencoder.path` with your pretrained paths.
@@ -52,7 +52,7 @@ training:
   log_every: 1
   save_every: 2000
   guidance_scale: 1.0
-  output_dir: /path/to/output/carlos_tv_poi_mask_0.1_mixture_seed_23
+  output_dir: /path/to/output/embee_tv_poi_mask_0.1_mixture_seed_23
   max_grad_norm: 1.0
   gradient_accumulation_steps: 1
   warmup_steps: 0

@@ -1,0 +1,42 @@
+# VOLUNTEER setup 1:
+# Baseline = condition only on home/work. The trainer forces
+# model.use_demo_condition=false for experiment.setup=baseline.
+
+experiment:
+  setup: baseline
+
+model:
+  vocab_size: 9506
+  loc_emb_size: 256
+  tim_emb_size: 64
+  demo_emb_size: 128
+  pos_emb_size: 64
+  hidden_size: 512
+  latent_size: 256
+  dropout: 0.2
+  num_age_bins: 4
+  num_genders: 2
+  max_seq_len: 64
+  tim_buckets: 1440
+  num_special_tokens: 5
+  use_demo_condition: false
+  demo_conditioning_type: legacy
+
+data:
+  split_data_dir: /path/to/embee_ca/controlled
+  num_workers: 4
+
+training:
+  epochs: 100
+  lr: 1.0e-4
+  batch_size: 512
+  max_grad_norm: 1.0
+  log_every: 50
+  save_every_epochs: 20
+  output_dir: runs/volunteer_baseline
+  wandb: true
+  wandb_project: volunteer-atlas
+  wandb_run_name: volunteer-baseline-homework
+
+device: cuda
+seed: 42

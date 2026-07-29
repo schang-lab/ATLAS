@@ -1,0 +1,109 @@
+# DiT LLP (CBG-conditioned) finetune on the Foursquare NYC DEMO-GROUP world
+# (8 age x gender demo groups).
+#
+# Run:
+#   python3 trajectory-generation/scripts/training/run_cbg_conditioned_training.py \
+#     --config trajectory-generation/configs/foursquare-nyc-dit/nyc_atlas_georegions.yaml
+#
+# georegion supervision.
+diffusion:
+  # Demo-conditioned DiT arch (must match the checkpoint below).
+  config: trajectory-generation/configs/foursquare-nyc/dit_config_nyc_demo.yaml
+  # Your pretrained NYC baseline (phase-1) DiT checkpoint — EDIT to your run's step dir.
+  checkpoint: /path/to/phase1_dit_nyc/state_dicts/dit_step_65000.pt
+
+  timesteps: 1000
+  prediction_type: x0
+  latent_dim: 128
+  seq_len: 64
+  beta_schedule: cosine
+  timestep_sampling: uniform
+
+autoencoder:
+  path: /path/to/phase1_autoencoder_nyc/checkpoint
+
+data:
+  cbg_cache_dir: /path/to/atlas_world/foursquare_nyc_demogroups/cache/train
+  poi_marginal_csv: /path/to/atlas_world/foursquare_nyc_demogroups/aggregates/train/p_poi.csv
+  allowed_cbgs: []
+  num_special_tokens: 5
+  # Optional; verify the exact filename the NYC world writer produced.
+  length_dists_json: /path/to/atlas_world/foursquare_nyc_demogroups/length_dists_train_demogroups.json
+  min_traj_len: 2
+  max_traj_length: 64
+
+training:
+  aggregate_loss:
+    type: js
+    epsilon: 1.0e-8
+  steps: 50000
+  batch_size: 1024
+  lr: 1e-6
+  lambda_agg: 1.0
+  log_every: 1
+  save_every: 5000
+  guidance_scale: 1.0
+  output_dir: /path/to/output/foursquare_nyc/nyc_dit_demo_js_seed_42
+  max_grad_norm: 1.0
+  gradient_accumulation_steps: 1
+  warmup_steps: 0
+
+  aggregate_sampler:
+    method: ddim
+    ddim_steps: 50
+    ddim_eta: 0.0
+
+  # NYC vocab has NO POI_HOME/POI_WORK/POI_OTHER — this mask MUST stay disabled
+  # (run_cbg_conditioned_training.py raises if a drop-token is absent from vocab).
+  poi_token_mask:
+    enabled: false
+
+  # NYC has no coords → nothing to drop.
+  aggregate_coord_dropout: 0.0
+
+  wandb: true
+  wandb_project: foursquare-nyc-dit-aggregate
+  log_agg_by_cbg: true
+  seed: 42
+
+  llp:
+    enabled: true
+    demo_source: pi
+    min_per_group: 0
+
+  validation:
+    enabled: true
+    eval_every: 10
+    num_batches: 10
+    batch_size: 1024
+    cbg_cache_dir: /path/to/atlas_world/foursquare_nyc_demogroups/cache/val
+    poi_marginal_csv: /path/to/atlas_world/foursquare_nyc_demogroups/aggregates/val/p_poi.csv
+    allowed_cbgs: []
+    num_special_tokens: 5
+    log_by_cbg: true
+    max_cbgs_to_log: 8
+
+  entropy_reg:
+    enabled: false
+    weight: 0.0
+  unique_reg:
+    enabled: false
+    weight: 0.0
+
+# Supervised diffusion (ELBO/MSE) branch on real trajectories.
+# NOTE: NYC controlled split carries per-trajectory demo; to avoid demo leakage in
+# this branch, use a nodemo NYC split here if you have one (CA used *_nodemo).
+diffusion_mse:
+  enabled: true
+  weight: 1
+  data_dir: /path/to/ATLAS/data/foursquare_nyc
+  batch_size: 256
+  num_workers: 4
+  data_type: controlled
+  conditional_dropout: 0.0
+  randomize_demo_from_cbg: false
+
+device: cuda
+
+latent_pca:
+  path: /path/to/latent_stats/train_nyc.pt

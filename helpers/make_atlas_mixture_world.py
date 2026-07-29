@@ -189,7 +189,7 @@ def main() -> None:
     demo_keys, regions = _load_pi_matrix(pi_json)
     if set(demo_keys) != set(DEFAULT_DEMOS):
         # Still allow custom ordering; just warn by printing.
-        print(f"[WARN] demo_keys differ from default Carlos set: {demo_keys}")
+        print(f"[WARN] demo_keys differ from default Embee set: {demo_keys}")
 
     V = _read_vocab(vocab_path)
     num_special = int(args.num_special_tokens)

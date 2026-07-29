@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Convert carlos_data/{traj.csv,demo.csv} into the split-data format used by this repo.
+Convert embee_data/{traj.csv,demo.csv} into the split-data format used by this repo.
 
 Key points:
 - One training sample == one segment_id
@@ -705,7 +705,7 @@ def main() -> None:
     ap.add_argument(
         "--city",
         type=str,
-        default="carlos",
+        default="embee",
         help="City label to store in final_segments_all_train_data.pkl (required by some training scripts).",
     )
     ap.add_argument(

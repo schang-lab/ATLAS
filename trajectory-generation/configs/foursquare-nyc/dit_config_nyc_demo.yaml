@@ -1,0 +1,32 @@
+# DiT architecture for Foursquare NYC — DEMO-CONDITIONED (strong + atlas).
+# Identical backbone to config_phase1_nyc_128.yml (hidden 128 / depth 8 / heads 4)
+# so the demo finetune can load the phase-1 baseline checkpoint with strict=False;
+# the demo embeddings init randomly.
+#
+# NYC has no home/work coords, so the "wide" (coords) branch carries no signal.
+# attr_wide_gain_init is set near-zero so conditioning is effectively demo-only.
+DiT:
+  image_size: 64
+  in_channels: 128          # NYC BART d_model=128 (also auto-set from latent_pca.component_dim)
+  hidden_size: 128
+  depth: 8
+  num_heads: 4
+
+  cond_feature: false
+  learn_sigma: false
+  use_fp16: false
+
+  use_length_condition: false
+  length_vocab_size: 64
+
+  # Demographic conditioning (raw ids; the trainer shifts +1 so 0 = null/pad).
+  use_demo_condition: true
+  num_age_bins: 4           # NYC age_id ∈ {0,1,2,3}
+  num_genders: 2            # NYC gender_id ∈ {0,1}
+  demo_hidden_dim: 256
+
+  # NYC has no coords → suppress the wide/coords branch, keep demo branch.
+  attr_wide_gain_init: 0.001
+  attr_demo_gain_init: 3.0
+  attr_gain_learnable: false
+  attr_branch_norm: none

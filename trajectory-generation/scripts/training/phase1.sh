@@ -39,7 +39,7 @@ srun python "${TRAIN_SCRIPT}" \
     --OPTIM_LR 1e-4 \
     --training_phase phase1 \
     --use_wandb \
-    --wandb_project dit-carlos \
+    --wandb_project dit-embee \
     --wandb_run_name baseline-23 \
     --seed 23 \
     --enable_validation \

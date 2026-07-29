@@ -1,0 +1,20 @@
+# VAE backbone configuration with demographic conditioning for ATLAS framework
+# Phase 1: operates on BART encoder outputs (d_model=512, seq_len=512)
+# Matches DiT's demo conditioning: 4 age bins, 2 genders
+
+VAE:
+    image_size: 64      # Must match BART max_length
+    in_channels: 256    # Must match BART d_model
+    hidden_size: 256    # 2x in_channels for good capacity
+    latent_code_dim: 64    # VAE bottleneck dimension
+    encoder_layers: 4      # transformer encoder layers
+    decoder_layers: 4      # transformer decoder layers
+    num_heads: 8
+    dropout: 0.1
+    beta_kl: 0.001         # KL weight (start small, can anneal)
+
+    # Demographic conditioning (same interface as DiT)
+    use_demo_condition: true
+    num_age_bins: 4        # raw ids {0,1,2,3}; embeddings use +1 shift so 0=null
+    num_genders: 2         # raw ids {0,1}; embeddings use +1 shift so 0=null
+    demo_hidden_dim: 256

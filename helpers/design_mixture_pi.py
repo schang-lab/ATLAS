@@ -2,7 +2,7 @@
 """
 Design a mixture-LLP demographic matrix Π (regions x demos).
 
-Default (Carlos): 8 demos (4 ages x 2 genders) and 16 regions:
+Default (Embee): 8 demos (4 ages x 2 genders) and 16 regions:
   - 8 near-one-hot regions (dominant demo mass = 0.85)
   - 8 pairwise mixture regions (0.5 / 0.5), built from two edge-disjoint perfect matchings
 
@@ -90,7 +90,7 @@ def main() -> None:
     ap.add_argument("--out-json", type=str, required=True, help="Output pi_matrix.json path")
     ap.add_argument("--out-csv", type=str, default=None, help="Optional pi_matrix.csv path")
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--demo-keys", type=str, nargs="*", default=None, help="Demo keys like a0_g0 a0_g1 ... (default: 8 Carlos demos)")
+    ap.add_argument("--demo-keys", type=str, nargs="*", default=None, help="Demo keys like a0_g0 a0_g1 ... (default: 8 Embee demos)")
     ap.add_argument("--dominant-mass", type=float, default=0.85, help="Mass on dominant demo for near-one-hot rows")
     ap.add_argument("--pair-mass", type=float, default=0.5, help="Mass on each of two demos for pair rows")
     ap.add_argument("--num-hot", type=int, default=8, help="How many near-one-hot regions to include (<=8)")

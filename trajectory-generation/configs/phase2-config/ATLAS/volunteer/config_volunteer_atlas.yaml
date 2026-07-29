@@ -1,0 +1,79 @@
+# VOLUNTEER setup 3:
+# ATLAS = start from the home/work baseline, enable demo conditioning, then
+# learn demo-conditioned POI behavior from aggregate CBG supervision.
+
+experiment:
+  setup: atlas
+  init_checkpoint: runs/volunteer_baseline/baseline_final.pt
+
+model:
+  vocab_size: 9506
+  loc_emb_size: 256
+  tim_emb_size: 64
+  demo_emb_size: 128
+  pos_emb_size: 64
+  hidden_size: 512
+  latent_size: 256
+  dropout: 0.2
+  num_age_bins: 4
+  num_genders: 2
+  max_seq_len: 64
+  tim_buckets: 1440
+  num_special_tokens: 5
+  use_demo_condition: true
+  demo_conditioning_type: legacy
+
+data:
+  split_data_dir: /path/to/embee_ca_nodemo/controlled
+  num_workers: 4
+
+atlas:
+  cbg_cache_dir: /path/to/atlas_world/embee_ca_demogroups/cache/train
+  poi_marginal_csv: /path/to/atlas_world/embee_ca_demogroups/aggregates/train/p_poi.csv
+  allowed_cbgs: []
+  # pi = true aggregate supervision: sample age/gender from the CBG demo
+  # proportions and use them for both conditioning and LLP grouping.
+  # cache = diagnostic mode using cached per-trajectory demo labels.
+  demo_source: pi
+  aggregate_loss:
+    type: js
+    epsilon: 1.0e-8
+  llp:
+    enabled: true
+    min_per_group: 0
+  # Held-out aggregate validation, analogous to the pure VAE ATLAS trainer.
+  validation:
+    enabled: true
+    cbg_cache_dir: /path/to/atlas_world/embee_ca_demogroups/cache/val
+    poi_marginal_csv: /path/to/atlas_world/embee_ca_demogroups/aggregates/val/p_poi.csv
+    allowed_cbgs: []
+    demo_source: inherit
+    num_batches: 10
+    batch_size: 1024
+    log_by_cbg: true
+    max_cbgs_to_log: 8
+
+training:
+  steps: 20000
+  lr: 1.0e-6
+  batch_size: 512
+  aggregate_batch_size: 1024
+  lambda_agg: 1.0
+  # Optional reconstruction/ELBO regularizer on real trajectories during ATLAS.
+  # By default it nulls demo IDs, so it preserves home/work behavior without
+  # leaking per-trajectory demographic labels. Set lambda_vae=0.0 for pure
+  # aggregate-only fine-tuning.
+  lambda_vae: 1.0
+  vae_regularizer_demo_source: null
+  lambda_entropy: 0.0
+  max_grad_norm: 1.0
+  log_every: 50
+  val_every: 100
+  save_every: 5000
+  output_dir: /path/to/output/runs/volunteer_atlas_lambda_1_lr_1e-6_seed_42
+  wandb: true
+  wandb_project: volunteer-atlas-aggregate
+  wandb_run_name: lambda-1-lr-1e-6-seed-42
+
+device: cuda
+seed: 42
